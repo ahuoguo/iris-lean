@@ -1,6 +1,7 @@
 module
 
 public import Iris.ProgramLogic.AbstractEctxLangCompleteness
+public import Iris.ProgramLogic.Atomic
 public import Iris.ProgramLogic.AbstractLangCompleteness
 public import Iris.ProgramLogic.AbstractWeakestPre
 public import Iris.ProgramLogic.Adequacy
