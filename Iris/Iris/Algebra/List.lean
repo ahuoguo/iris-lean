@@ -13,7 +13,11 @@ public import Iris.Std.List
 
 namespace Iris
 
+variable {SI : Type _} [instSI : SIdx SI]
+local stepindex SI
+
 open OFE COFE Iris.Algebra
+
 
 /-! ## The pointwise list OFE -/
 
@@ -223,7 +227,7 @@ def listComplGo : List α → Chain (List α) → List α
   | [], _ => []
   | x :: c0, c => compl (c.map (headGetDHom x)) :: listComplGo c0 (c.map tailHom)
 
-theorem listComplGo_conv_compl {n : Nat} (c : Chain (List α)) :
+theorem listComplGo_conv_compl {n : SI} (c : Chain (List α)) :
     ∀ (c0 : List α), c0 ≡{0}≡ c n → listComplGo c0 c ≡{n}≡ c n
   | [], H => by rw [nil_dist_eq.mp H.symm]; exact .rfl
   | x :: c0, H => by
@@ -238,10 +242,54 @@ theorem listComplGo_conv_compl {n : Nat} (c : Chain (List α)) :
         exact hxs.symm
       · simp [Chain.map_apply, tailHom_apply, hcn]
 
+/-- The bounded analogue of `listComplGo`: completes a bounded chain at a limit index `n`. -/
+@[rocq_alias list_lbcompl_go]
+def listLBComplGo {n : SI} (hn : SIdx.Limit n) : List α → BChain (List α) n → List α
+  | [], _ => []
+  | x :: c0, c => IsCOFE.lbcompl hn (c.map (headGetDHom x)) :: listLBComplGo hn c0 (c.map tailHom)
+
+theorem listLBComplGo_conv_lbcompl {n : SI} (hn : SIdx.Limit n) {m : SI} (hm : m < n) :
+    ∀ (c : BChain (List α) n) (c0 : List α), c0 ≡{0}≡ c.bchain m hm →
+      listLBComplGo hn c0 c ≡{m}≡ c.bchain m hm
+  | c, [], H => by rw [nil_dist_eq.mp H.symm]; exact .rfl
+  | c, x :: c0, H => by
+    obtain ⟨x', xs', _, hxs, hcn⟩ := cons_dist_eq H.symm
+    rw [hcn]
+    change IsCOFE.lbcompl hn (c.map (headGetDHom x)) :: listLBComplGo hn c0 (c.map tailHom)
+      ≡{m}≡ x' :: xs'
+    refine .cons ?_ ?_
+    · refine (IsCOFE.conv_lbcompl hn _ hm).trans (Dist.of_eq ?_)
+      simp [BChain.map_apply, headGetDHom_apply, hcn]
+    · refine (listLBComplGo_conv_lbcompl hn hm (c.map tailHom) c0 ?_).trans (Dist.of_eq ?_)
+      · simp only [BChain.map_apply, tailHom_apply, hcn, List.tail_cons]
+        exact hxs.symm
+      · simp [BChain.map_apply, tailHom_apply, hcn]
+
+theorem headGetD_dist {m : SI} {l k : List α} {x y : α} (hl : l ≡{m}≡ k) (hxy : x ≡{m}≡ y) :
+    l.head?.getD x ≡{m}≡ k.head?.getD y := by
+  cases hl with
+  | nil => exact hxy
+  | cons hh _ => exact hh
+
+theorem listLBComplGo_ne {n : SI} (hn : SIdx.Limit n) {m : SI} :
+    ∀ {c0 d0 : List α}, c0 ≡{m}≡ d0 → ∀ (c1 c2 : BChain (List α) n),
+      (∀ p (hp : p < n), c1.bchain p hp ≡{m}≡ c2.bchain p hp) →
+      listLBComplGo hn c0 c1 ≡{m}≡ listLBComplGo hn d0 c2
+  | [], [], _, _, _, _ => .nil
+  | x :: _, y :: _, .cons hxy h, c1, c2, hc => by
+    refine .cons (IsCOFE.lbcompl_ne hn _ _ fun p hp => ?_)
+      (listLBComplGo_ne hn h _ _ fun p hp => ?_)
+    · exact headGetD_dist (hc p hp) hxy
+    · exact tailHom.ne.ne (hc p hp)
+
 @[rocq_alias list.list_cofe]
 instance : IsCOFE (List α) where
   compl c := listComplGo (c 0) c
-  conv_compl {n c} := listComplGo_conv_compl c (c 0) (c.cauchy (Nat.zero_le n)).symm
+  conv_compl {_ c} := listComplGo_conv_compl c (c 0) (c.cauchy SIdx.le_0_l).symm
+  lbcompl hn c := listLBComplGo hn (c.bchain 0 hn.limit_lt_0) c
+  conv_lbcompl hn c _ hm :=
+    listLBComplGo_conv_lbcompl hn hm c _ (c.bcauchy hn.limit_lt_0 hm SIdx.le_0_l).symm
+  lbcompl_ne hn c1 c2 _ hc := listLBComplGo_ne hn (hc 0 hn.limit_lt_0) c1 c2 hc
 
 end cofe
 
@@ -325,7 +373,7 @@ end higher_order
 
 @[rocq_alias big_opL_ne_2]
 theorem bigOpL_dist_2 {M α : Type _} [OFE M] [OFE α] {op : M → M → M} {unit : M} [MonoidOps op unit]
-    {n : Nat} {l1 l2 : List α} (hl : l1 ≡{n}≡ l2) : ∀ {f g : Nat → α → M},
+    {n : SI} {l1 l2 : List α} (hl : l1 ≡{n}≡ l2) : ∀ {f g : Nat → α → M},
     (∀ {k : Nat} {y1 y2}, l1[k]? = some y1 → l2[k]? = some y2 → y1 ≡{n}≡ y2 → f k y1 ≡{n}≡ g k y2) →
     bigOpL op f l1 ≡{n}≡ bigOpL op g l2 := by
   induction hl with

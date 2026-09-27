@@ -12,6 +12,9 @@ public import Iris.ProofMode.SynthInstanceAttr
 
 namespace Iris
 
+variable {SI : Type _} [instSI : SIdx SI]
+local stepindex SI
+
 open CMRA ProofMode
 
 section IsOp

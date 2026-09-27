@@ -7,9 +7,11 @@ module
 
 public import Iris.HeapLang
 public import Iris.HeapLang.Lib.NondetBool
+local stepindex Nat
 
 /-! # The clairvoyant coin -/
 
+noncomputable section
 namespace Iris.HeapLang
 
 @[rocq_alias heap_lang.clairvoyant_coin.new_coin]

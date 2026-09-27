@@ -18,7 +18,8 @@ namespace Iris.HeapLang
 
 open BI Iris Iris.Std ProgramLogic CMRA OFE LeibnizMultiSet FiniteMultiSet
 
-@[expose] public section
+@[expose] public noncomputable section
+local stepindex Nat
 
 namespace RwSpinLock
 

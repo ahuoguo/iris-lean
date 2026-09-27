@@ -13,7 +13,8 @@ public import Iris.ProofMode
 public import Iris.BI.Algebra
 public import Iris.Instances.IProp
 
-@[expose] public section
+@[expose] public noncomputable section
+local stepindex Nat
 
 /-! ## Later credits -/
 
@@ -45,13 +46,13 @@ scoped instance {a : Credit} : CMRA.Cancelable a := inferInstance
 
 /-- Later credits inclusion typeclass (`GF` contains the necessary functors for later credits) -/
 @[rocq_alias lcGpreS]
-class LcGpreS (GF : BundledGFunctors) where
+class LcGpreS (GF : BundledGFunctors.{0, 0}) where
   lc_elem : ElemG GF (AuthURF (constOF Credit))
 
 attribute [reducible, instance] LcGpreS.lc_elem
 
 @[rocq_alias lcGS]
-class LcGS (hlc : outParam HasLC) (GF : BundledGFunctors) extends LcGpreS GF where
+class LcGS (hlc : outParam HasLC) (GF : BundledGFunctors.{0, 0}) extends LcGpreS GF where
   lc_name : GName
 
 #rocq_ignore «lcΣ» "Superseded by the `LcGpreS` typeclass on `BundledGFunctors`."

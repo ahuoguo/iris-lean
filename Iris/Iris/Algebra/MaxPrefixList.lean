@@ -22,6 +22,8 @@ the List type itself. However, there is an embedding of Lists in to this data st
 
 namespace Iris
 
+local stepindex Nat
+
 open OFE CMRA Iris.Std
 
 abbrev MaxPrefixListMap : Type _ → Type _ :=
@@ -213,9 +215,11 @@ theorem toMaxPrefixList_op_validN {n} {l1 l2 : List α} :
     · exact .inr ⟨_, toMaxPrefixList_op_validN_aux (by omega) (comm'.dist.validN.mp h)⟩
   · rintro (⟨l, hl⟩ | ⟨l, hl⟩)
     · refine (Dist.validN (toMaxPrefixList_ne.ne hl).op_r).mpr ?_
-      grind [List.prefix_append]
+      rw [toMaxPrefixList_op_left (l2 := l1 ++ l) (List.prefix_append ..)]
+      exact toMaxPrefixList_validN _
     · refine (Dist.validN (toMaxPrefixList_ne.ne hl).op_l).mpr ?_
-      grind [List.prefix_append]
+      rw [toMaxPrefixList_op_right (l2 := l2 ++ l) (List.prefix_append ..)]
+      exact toMaxPrefixList_validN _
 
 @[rocq_alias to_max_prefix_list_op_valid]
 theorem toMaxPrefixList_op_valid {l1 l2 : List α} :

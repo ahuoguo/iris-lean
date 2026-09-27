@@ -12,6 +12,9 @@ public import Iris.Algebra.CMRA
 
 namespace Iris.Algebra
 
+variable {SI : Type _} [instSI : SIdx SI]
+local stepindex SI
+
 open OFE Iris.Std
 
 variable [CMRA M]

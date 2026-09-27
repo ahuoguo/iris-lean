@@ -17,7 +17,8 @@ public import Iris.Instances.Lib.LaterCredits
 public import Iris.BI.Plainly
 public import Iris.Std
 
-@[expose] public section
+@[expose] public noncomputable section
+local stepindex Nat
 
 namespace Iris
 
@@ -26,7 +27,7 @@ open Iris OFE COFE BI Auth
 section InvG
 
 @[rocq_alias invGpreS]
-class InvGpreS (GF : BundledGFunctors) where
+class InvGpreS (GF : BundledGFunctors.{0, 0}) where
   toWsatGpreS : WsatGpreS GF
   toLcGpreS : LcGpreS GF
 
@@ -34,7 +35,7 @@ attribute [reducible, instance] InvGpreS.toWsatGpreS
 attribute [reducible, instance] InvGpreS.toLcGpreS
 
 @[rocq_alias invGS_gen]
-class InvGS_gen (hlc : outParam HasLC) (GF : BundledGFunctors) extends InvGpreS GF where
+class InvGS_gen (hlc : outParam HasLC) (GF : BundledGFunctors.{0, 0}) extends InvGpreS GF where
   toWsatGS : WsatGS GF
   toLcGS : LcGS hlc GF
 
@@ -644,7 +645,7 @@ elab "inext " t:(colGt term:max)? " credit: " h:ident : tactic => do
     Lean.Elab.Term.synthesizeSyntheticMVarsNoPostponing
     instantiateMVars n
 
-  ProofModeM.runTactic `inext fun mvar { u, prop, bi, e, hyps, goal, .. } => do
+  ProofModeM.runTactic `inext fun mvar { u, prop, vsi, si, isi, bi, e, hyps, goal, .. } => do
     -- Search for the later credit hypothesis from the context
     let ivar ← hyps.findWithInfo h
     let some ⟨name, _, p, ty⟩ := hyps.getDecl? ivar
@@ -654,7 +655,7 @@ elab "inext " t:(colGt term:max)? " credit: " h:ident : tactic => do
     --- see https://github.com/leanprover-community/iris-lean/pull/633
     let some #[_, _, _, c] := Expr.appM? ty ``lc
       | throwError m!"inext: {h} is not a spatial later credit hypothesis"
-    let some #[GF] := Expr.appM? prop ``IProp
+    let some #[_, _, GF] := Expr.appM? prop ``IProp
       | throwError "inext: the goal must be an `IProp`"
     let ⟨e', hyps', _, _, _, _, pfEq⟩ := hyps.remove false ivar
     let .some instInvGS ← trySynthInstance (mkApp (.const ``InvGS []) GF)
@@ -680,8 +681,8 @@ elab "inext " t:(colGt term:max)? " credit: " h:ident : tactic => do
     unless ← isDefEq newN q(0) do
       throwError "inext: insufficient credits"
 
-    have modality : Q(@Modality $prop $prop $bi $bi) :=
-      mkAppN (.const ``modality_laterN [u]) #[prop, n, bi]
+    have modality : Q(@Modality $si $isi $prop $prop $bi $bi) :=
+      mkAppN (.const ``modality_laterN [vsi, u]) #[si, isi, prop, n, bi]
 
     let newC : Q(Nat) ← instantiateMVars newC
     match newC.nat? with

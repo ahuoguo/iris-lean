@@ -12,6 +12,9 @@ public import Iris.BI.Notation
 
 namespace Iris.BI
 
+variable {SI : Type _} [instSI : Iris.SIdx SI]
+local stepindex SI
+
 public section List
 open Iris.Algebra Iris.Std OFE BIBase
 
@@ -20,21 +23,21 @@ open Iris.Algebra Iris.Std OFE BIBase
 
 instance sepMonoidOps [BI PROP] : MonoidOps (sep (PROP := PROP)) emp where
   op_ne := BI.sep_ne
-  op_assoc := (BiEntails.to_eq sep_assoc)
-  op_comm := (BiEntails.to_eq sep_comm)
-  op_left_id := (BiEntails.to_eq emp_sep)
+  assoc := (BiEntails.to_eq sep_assoc)
+  comm := (BiEntails.to_eq sep_comm)
+  left_id := (BiEntails.to_eq emp_sep)
 
 instance andMonoidOps [BI PROP] : MonoidOps (and (PROP := PROP)) iprop(True) where
   op_ne := BI.and_ne
-  op_assoc := (BiEntails.to_eq and_assoc)
-  op_comm := (BiEntails.to_eq and_comm)
-  op_left_id := (BiEntails.to_eq true_and)
+  assoc := (BiEntails.to_eq and_assoc)
+  comm := (BiEntails.to_eq and_comm)
+  left_id := (BiEntails.to_eq true_and)
 
 instance orMonoidOps [BI PROP] : MonoidOps (or (PROP := PROP)) iprop(False) where
   op_ne := BI.or_ne
-  op_assoc := (BiEntails.to_eq or_assoc)
-  op_comm := (BiEntails.to_eq or_comm)
-  op_left_id := (BiEntails.to_eq false_or)
+  assoc := (BiEntails.to_eq or_assoc)
+  comm := (BiEntails.to_eq or_comm)
+  left_id := (BiEntails.to_eq false_or)
 
 /-! ## Homomorphism helpers for OFE equivalence -/
 
@@ -295,8 +298,8 @@ def delabBigSepL : Delab := do
   unless e.isApp do failure
   unless e.getAppFn.isConstOf ``bigSepL do failure
   let args := e.getAppArgs
-  unless args.size == 5 do failure
-  delabBigOpLBody args[3]! 4 3
+  unless args.size == 7 do failure
+  delabBigOpLBody args[5]! 6 5
     (fun x y l P => `([∗list]  $x ↦ $y ∈ $l, $P))
     (fun y l P => `([∗list]  $y ∈ $l, $P))
 
@@ -307,8 +310,8 @@ def delabBigAndL : Delab := do
   unless e.isApp do failure
   unless e.getAppFn.isConstOf ``bigAndL do failure
   let args := e.getAppArgs
-  unless args.size == 5 do failure
-  delabBigOpLBody args[3]! 4 3
+  unless args.size == 7 do failure
+  delabBigOpLBody args[5]! 6 5
     (fun x y l P => `([∧list]  $x ↦ $y ∈ $l, $P))
     (fun y l P => `([∧list]  $y ∈ $l, $P))
 
@@ -319,8 +322,8 @@ def delabBigOrL : Delab := do
   unless e.isApp do failure
   unless e.getAppFn.isConstOf ``bigOrL do failure
   let args := e.getAppArgs
-  unless args.size == 5 do failure
-  delabBigOpLBody args[3]! 4 3
+  unless args.size == 7 do failure
+  delabBigOpLBody args[5]! 6 5
     (fun x y l P => `([∨list]  $x ↦ $y ∈ $l, $P))
     (fun y l P => `([∨list]  $y ∈ $l, $P))
 
@@ -331,17 +334,17 @@ def delabBigSepL2 : Delab := do
   unless e.isApp do failure
   unless e.getAppFn.isConstOf ``bigSepL2 do failure
   let args := e.getAppArgs
-  unless args.size == 7 do failure
-  let fn := args[4]!
-  let l1 ← withNaryArg 5 delab
-  let l2 ← withNaryArg 6 delab
+  unless args.size == 9 do failure
+  let fn := args[6]!
+  let l1 ← withNaryArg 7 delab
+  let l2 ← withNaryArg 8 delab
   match fn with
   | .lam kn _ body1 _ =>
     match body1 with
     | .lam x1n _ body2 _ =>
       match body2 with
       | .lam x2n _ _ _ =>
-        let (kUsed, P) ← withNaryArg 4 <|
+        let (kUsed, P) ← withNaryArg 6 <|
           withBindingBody' kn (fun kFVar => return kFVar.fvarId!) fun kFVarId => do
             let innerBody := (← getExpr).bindingBody!.bindingBody!
             let kUsed := innerBody.containsFVar kFVarId
@@ -392,8 +395,8 @@ def delabBigSepM : Delab := do
   unless e.isApp do failure
   unless e.getAppFn.isConstOf ``bigSepM do failure
   let args := e.getAppArgs
-  unless args.size == 8 do failure
-  delabBigOpMBody args[6]! 7 6
+  unless args.size == 10 do failure
+  delabBigOpMBody args[8]! 9 8
     (fun k x m P => `([∗map]  $k ↦ $x ∈ $m, $P))
     (fun x m P => `([∗map]  $x ∈ $m, $P))
 
@@ -404,8 +407,8 @@ def delabBigAndM : Delab := do
   unless e.isApp do failure
   unless e.getAppFn.isConstOf ``bigAndM do failure
   let args := e.getAppArgs
-  unless args.size == 8 do failure
-  delabBigOpMBody args[6]! 7 6
+  unless args.size == 10 do failure
+  delabBigOpMBody args[8]! 9 8
     (fun k x m P => `([∧map]  $k ↦ $x ∈ $m, $P))
     (fun x m P => `([∧map]  $x ∈ $m, $P))
 
@@ -417,15 +420,15 @@ def delabBigOpM : Delab := do
   unless e.isApp do failure
   unless e.getAppFn.isConstOf ``Iris.Algebra.bigOpM do failure
   let args := e.getAppArgs
-  unless args.size == 11 do failure
-  let op := args[3]!
+  unless args.size == 13 do failure
+  let op := args[5]!
   let opName := op.getAppFn.constName?
   if opName == some ``BIBase.sep then
-    delabBigOpMBody args[7]! 10 7
+    delabBigOpMBody args[9]! 12 9
       (fun k x m P => `([∗map]  $k ↦ $x ∈ $m, $P))
       (fun x m P => `([∗map]  $x ∈ $m, $P))
   else if opName == some ``BIBase.and then
-    delabBigOpMBody args[7]! 10 7
+    delabBigOpMBody args[9]! 12 9
       (fun k x m P => `([∧map]  $k ↦ $x ∈ $m, $P))
       (fun x m P => `([∧map]  $x ∈ $m, $P))
   else
@@ -449,17 +452,17 @@ def delabBigSepM2 : Delab := do
   unless e.isApp do failure
   unless e.getAppFn.isConstOf ``bigSepM2 do failure
   let args := e.getAppArgs
-  unless args.size == 10 do failure
-  let fn := args[7]!
-  let m1 ← withNaryArg 8 delab
-  let m2 ← withNaryArg 9 delab
+  unless args.size == 12 do failure
+  let fn := args[9]!
+  let m1 ← withNaryArg 10 delab
+  let m2 ← withNaryArg 11 delab
   match fn with
   | .lam kn _ body1 _ =>
     match body1 with
     | .lam x1n _ body2 _ =>
       match body2 with
       | .lam x2n _ _ _ =>
-        let (kUsed, P) ← withNaryArg 7 <|
+        let (kUsed, P) ← withNaryArg 9 <|
           withBindingBody' kn (fun kFVar => return kFVar.fvarId!) fun kFVarId => do
             let innerBody := (← getExpr).bindingBody!.bindingBody!
             let kUsed := innerBody.containsFVar kFVarId
@@ -483,8 +486,8 @@ def delabBigSepS : Delab := do
   unless e.isApp do failure
   unless e.getAppFn.isConstOf ``bigSepS do failure
   let args := e.getAppArgs
-  unless args.size == 7 do failure
-  delabBigOpSBody args[5]! 6 5
+  unless args.size == 9 do failure
+  delabBigOpSBody args[7]! 8 7
     (fun x s P => `([∗set]  $x ∈ $s, $P))
 
 /-- Delaborator for `bigOpS` applied to `sep` — catches cases where
@@ -495,11 +498,11 @@ def delabBigOpS : Delab := do
   unless e.isApp do failure
   unless e.getAppFn.isConstOf ``Iris.Algebra.bigOpS do failure
   let args := e.getAppArgs
-  unless args.size == 10 do failure
-  let op := args[2]!
+  unless args.size == 12 do failure
+  let op := args[4]!
   let opName := op.getAppFn.constName?
   if opName == some ``BIBase.sep then
-    delabBigOpSBody args[8]! 9 8
+    delabBigOpSBody args[10]! 11 10
       (fun x s P => `([∗set]  $x ∈ $s, $P))
   else
     failure
@@ -521,8 +524,8 @@ def delabBigSepMS : Delab := do
   unless e.isApp do failure
   unless e.getAppFn.isConstOf ``bigSepMS do failure
   let args := e.getAppArgs
-  unless args.size == 7 do failure
-  delabBigOpMSBody args[5]! 6 5
+  unless args.size == 9 do failure
+  delabBigOpMSBody args[7]! 8 7
     (fun x X P => `([∗mset] $x ∈ $X, $P))
 
 @[delab app.Iris.Algebra.bigOpMS]
@@ -548,20 +551,20 @@ def delabBigOpL : Delab := do
   unless e.isApp do failure
   unless e.getAppFn.isConstOf ``Iris.Algebra.bigOpL do failure
   let args := e.getAppArgs
-  unless args.size == 8 do failure
-  let op := args[3]!
+  unless args.size == 10 do failure
+  let op := args[5]!
   -- Determine which BI connective the op is
   let opName := op.getAppFn.constName?
   if opName == some ``BIBase.sep then
-    delabBigOpLBody args[6]! 7 6
+    delabBigOpLBody args[8]! 9 8
       (fun x y l P => `([∗list]  $x ↦ $y ∈ $l, $P))
       (fun y l P => `([∗list]  $y ∈ $l, $P))
   else if opName == some ``BIBase.and then
-    delabBigOpLBody args[6]! 7 6
+    delabBigOpLBody args[8]! 9 8
       (fun x y l P => `([∧list]  $x ↦ $y ∈ $l, $P))
       (fun y l P => `([∧list]  $y ∈ $l, $P))
   else if opName == some ``BIBase.or then
-    delabBigOpLBody args[6]! 7 6
+    delabBigOpLBody args[8]! 9 8
       (fun x y l P => `([∨list]  $x ↦ $y ∈ $l, $P))
       (fun y l P => `([∨list]  $y ∈ $l, $P))
   else

@@ -15,6 +15,7 @@ namespace Iris.HeapLang
 open BI OFE
 
 @[expose] public section
+local stepindex Nat
 
 /-- A general interface for a reader-writer lock. -/
 @[rocq_alias heap_lang.rwlock]

@@ -11,6 +11,9 @@ public import Iris.Algebra.CMRA
 
 namespace Iris
 
+variable {SI : Type _} [instSI : SIdx SI]
+local stepindex SI
+
 section excl
 
 @[rocq_alias excl]
@@ -27,7 +30,7 @@ open OFE
 
 #rocq_ignore excl_equiv "OFE is Leibniz; use equality"
 
-@[simp, rocq_alias excl_dist] protected def Dist [OFE α] (n : Nat) : Excl α → Excl α → Prop
+@[simp, rocq_alias excl_dist] protected def Dist [OFE α] (n : SI) : Excl α → Excl α → Prop
   | excl a, excl b => a ≡{n}≡ b
   | invalid, invalid => True
   | _, _ => False
@@ -51,7 +54,7 @@ instance [OFE α] : OFE (Excl α) where
   Dist := Excl.Dist
   dist_eqv
   eq_dist' {x y} := by
-    cases x <;> cases y <;> simp [Excl.Dist, eq_dist]
+    cases x <;> cases y <;> simp [Excl.Dist, eq_dist (SI:=_)]
   dist_lt {n x y m} hn hlt := by
     cases x <;> cases y <;> simp at *
     exact Dist.lt hn hlt
@@ -112,14 +115,39 @@ def exclChain [OFE α] (c : Chain (Excl α)) (a : α) : Chain α := by
   dsimp; have := c.cauchy H; revert this
   cases c.chain i <;> cases c.chain n <;> simp [Dist]
 
+def exclBChain [OFE α] {n : SI} (c : BChain (Excl α) n) (a : α) : BChain α n where
+  bchain m hm := (c.bchain m hm).getD a
+  bcauchy {m p} hm hp H := by
+    dsimp; have := c.bcauchy hm hp H; revert this
+    cases c.bchain p hp <;> cases c.bchain m hm <;> simp [Dist]
+
 @[rocq_alias excl_cofe]
 instance [OFE α] [IsCOFE α] : IsCOFE (Excl α) where
   compl c := (c 0).map fun x => IsCOFE.compl (exclChain c x)
   conv_compl {n} c := by
-    have := c.cauchy (Nat.zero_le n); revert this
+    have := c.cauchy (i := n) SIdx.le_0_l; revert this
     obtain _|x' := c.chain 0 <;> rcases e : c.chain n with _|y' <;> simp [Dist]
     refine fun _ => .trans IsCOFE.conv_compl ?_
     simp [exclChain, e]
+  lbcompl hn c := (c.bchain 0 hn.limit_lt_0).map fun x => IsCOFE.lbcompl hn (exclBChain c x)
+  conv_lbcompl {n} hn c m hm := by
+    have := c.bcauchy hn.limit_lt_0 hm SIdx.le_0_l; revert this
+    obtain _|x' := c.bchain 0 hn.limit_lt_0 <;> rcases e : c.bchain m hm with _|y' <;> simp [Dist]
+    refine fun _ => .trans (IsCOFE.conv_lbcompl hn _ hm) ?_
+    simp [exclBChain, e]
+  lbcompl_ne {n} hn c1 c2 m hc := by
+    have h0 := hc 0 hn.limit_lt_0; revert h0
+    rcases e1 : c1.bchain 0 hn.limit_lt_0 with _|a1 <;>
+      rcases e2 : c2.bchain 0 hn.limit_lt_0 with _|a2 <;> simp [Dist]
+    intro _
+    refine IsCOFE.lbcompl_ne hn _ _ fun p hp => ?_
+    have h1 := c1.bcauchy hn.limit_lt_0 hp SIdx.le_0_l
+    have h2 := c2.bcauchy hn.limit_lt_0 hp SIdx.le_0_l
+    have hp' := hc p hp
+    revert h1 h2 hp'
+    rw [e1, e2]
+    rcases e3 : c1.bchain p hp with _|b1 <;> rcases e4 : c2.bchain p hp with _|b2 <;>
+      simp [Dist, exclBChain, e3, e4]
 
 /-! ## CMRA -/
 @[simp] def Valid : Excl α → Prop
@@ -145,7 +173,7 @@ instance [OFE α] : CMRA (Excl α) where
     constructor
     · intro h n; cases x <;> trivial
     · intro h; cases x <;> simp_all
-  validN_succ {x n} h := by cases x <;> trivial
+  validN_le {x n n'} h _ := by cases x <;> trivial
   assoc := by simp
   comm := by simp
   pcore_op_left := by simp
@@ -184,7 +212,7 @@ theorem excl_included [OFE α] {a b : α} :
     fun h => ⟨none, congrArg (fun x => some (excl x)) h.symm⟩⟩
   rcases z with _|z
   · exact (excl_inj hz).symm
-  · exact (hz.dist (n := 0)).elim
+  · exact (hz.dist (n := (0 : SI))).elim
 
 @[rocq_alias Excl_includedN]
 theorem excl_includedN [OFE α] {a b : α} {n} :

@@ -10,7 +10,10 @@ public import Iris.Instances.IProp
 public import Iris.BI.Lib.Fractional
 public import Iris.ProofMode
 
-@[expose] public section
+@[expose] public noncomputable section
+variable {SI : Type _} [instSI : Iris.SIdx SI]
+local stepindex SI
+variable {GF : Iris.BundledGFunctors (SI := SI)}
 
 namespace Iris
 
@@ -228,7 +231,7 @@ theorem ghost_map_alloc_strong_empty [DecidableEq K] (P : GName → Prop)
 theorem ghost_map_alloc [DecidableEq K] (m : H V) :
     ⊢@{IProp GF} |==> ∃ γ, (γ ↪●MAP m) ∗ [∗map] k ↦ v ∈ m, γ ↪◯MAP[k] v := by
   imod (ghost_map_alloc_strong (fun _ => True) m) with ⟨%γ, -, H1, H2⟩
-  · intro N; exists N; simp
+  · intro N; exists N
   · iexists γ
     iframe H1 H2
 

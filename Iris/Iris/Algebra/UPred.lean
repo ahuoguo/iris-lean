@@ -7,45 +7,49 @@ module
 
 public import Iris.Algebra.CMRA
 public import Iris.Algebra.OFE
+public import Iris.Algebra.Truncation
 
 @[expose] public section
 
 namespace Iris
+
+variable {SI : Type _} [instSI : SIdx SI]
+local stepindex SI
 open CMRA
 
 -- EXPERIMENT: UPred Leibniz by construction
 -- https://leanprover.zulipchat.com/#narrow/channel/490604-iris-lean/topic/Bi-entailment.20and.20generalized.20rewriting/with/565019365
 @[ext]
-structure ValidAt (M : Type _) [UCMRA M] (n : Nat) where
+structure ValidAt (M : Type _) [UCMRA M] (n : SI) where
   val : M
   property : ✓{n} val
 
-instance {M : Type _} [UCMRA M] {n : Nat} : CoeOut (ValidAt M n) M where
+instance {M : Type _} [UCMRA M] {n : SI} : CoeOut (ValidAt M n) M where
   coe := (·.val)
 
-def ValidAt.le {M : Type _} [UCMRA M] {n m : Nat} (Hle : m ≤ n) : ValidAt M n → ValidAt M m :=
+def ValidAt.le {M : Type _} [UCMRA M] {n m : SI} (Hle : m ≤ n) : ValidAt M n → ValidAt M m :=
   fun v => ⟨v.val, validN_of_le Hle v.property⟩
 
 @[simp]
-theorem ValidAt.le_val {M : Type _} [UCMRA M] {n m : Nat} {Hle : m ≤ n} {v : ValidAt M n} :
+theorem ValidAt.le_val {M : Type _} [UCMRA M] {n m : SI} {Hle : m ≤ n} {v : ValidAt M n} :
   (v.le Hle).val = v.val := by rfl
 
 @[simp]
-theorem ValidAt.le_rfl {M : Type _} [UCMRA M] {n : Nat} {Hle : n ≤ n} {v : ValidAt M n} :
+theorem ValidAt.le_rfl {M : Type _} [UCMRA M] {n : SI} {Hle : n ≤ n} {v : ValidAt M n} :
   v.le Hle = v := by rfl
 
 /-- The data of a UPred object is an indexed proposition over M (Bundled version) -/
 @[ext, rocq_alias uPred]
 structure UPred (M : Type _) [UCMRA M] where
-  holds : (n : Nat) → ValidAt M n → Prop
+  holds : (n : SI) → ValidAt M n → Prop
   mono {n1 n2} {x1 : ValidAt M n1} {x2 : ValidAt M n2} :
     holds n1 x1 → (x1 : M) ≼{n2} (x2 : M) → (Hle : n2 ≤ n1) → holds n2 x2
 
-def UPred.holds_unpacked {M : Type _} [UCMRA M] (P : UPred M) (n : Nat) (x : M) (Hx : ✓{n} x) :
+def UPred.holds_unpacked {M : Type _} [UCMRA M] (P : UPred M) (n : SI) (x : M) (Hx : ✓{n} x) :
     Prop :=
   P.holds n ⟨x, Hx⟩
 
-theorem UPred.mono_unpacked {M : Type _} [UCMRA M] (P : UPred M) {n1 n2 : Nat} {x1 x2 : M}
+theorem UPred.mono_unpacked {M : Type _} [UCMRA M] (P : UPred M) {n1 n2 : SI} {x1 x2 : M}
     (Hx1 : ✓{n1} x1) (Hx2 : ✓{n2} x2) (HP : P.holds_unpacked n1 x1 Hx1) (Hxle : x1 ≼{n2} x2)
     (Hle : n2 ≤ n1) : P.holds_unpacked n2 x2 Hx2 :=
   P.mono HP Hxle Hle
@@ -53,7 +57,7 @@ theorem UPred.mono_unpacked {M : Type _} [UCMRA M] (P : UPred M) {n1 n2 : Nat} {
 /-- The definition of UPred is equivalent to separately proving pointwise down-closure,
 non-expansivity, and monotonicity. -/
 @[rocq_alias uPred_alt]
-theorem uPred_alt {M : Type _} [UCMRA M] (P : Nat → M → Prop) :
+theorem uPred_alt {M : Type _} [UCMRA M] (P : SI → M → Prop) :
     (∀ {n1 n2} {x1 x2 : M}, P n1 x1 → x1 ≼{n1} x2 → n2 ≤ n1 → P n2 x2) ↔
     ((∀ {x : M} {n1 n2}, n2 ≤ n1 → P n1 x → P n2 x) ∧
      (∀ {n} {x1 x2 : M}, x1 ≡{n}≡ x2 → ∀ m, m ≤ n → (P m x1 ↔ P m x2)) ∧
@@ -62,16 +66,16 @@ theorem uPred_alt {M : Type _} [UCMRA M] (P : Nat → M → Prop) :
   · intro H
     refine ⟨fun Hle HP => H HP .rfl Hle, ?_, ?_⟩
     · refine fun He m Hm => ⟨fun HP => ?_, fun HP => ?_⟩
-      · exact H HP (incN_of_dist_of_incN (He.le Hm) .rfl) (Nat.le_refl _)
-      · exact H HP (incN_of_dist_of_incN (He.le Hm).symm .rfl) (Nat.le_refl _)
-    · exact fun Hinc m Hm HP => H HP (incN_of_incN_le Hm Hinc) (Nat.le_refl _)
+      · exact H HP (incN_of_dist_of_incN (He.le Hm) .rfl) SIdx.le_refl
+      · exact H HP (incN_of_dist_of_incN (He.le Hm).symm .rfl) SIdx.le_refl
+    · exact fun Hinc m Hm HP => H HP (incN_of_incN_le Hm Hinc) SIdx.le_refl
   · refine fun ⟨Hdc, _, Hmono⟩ n1 n2 x1 x2 HP Hinc Hle => ?_
-    exact Hmono (incN_of_incN_le Hle Hinc) n2 (Nat.le_refl _) (Hdc Hle HP)
+    exact Hmono (incN_of_incN_le Hle Hinc) n2 SIdx.le_refl (Hdc Hle HP)
 
 instance [UCMRA M] : Inhabited (UPred M) :=
   ⟨fun _ _ => True, fun _ _ _ => ⟨⟩⟩
 
-instance [UCMRA M] : CoeFun (UPred M) (fun _ => (n : Nat) → ValidAt M n → Prop) where
+instance [UCMRA M] : CoeFun (UPred M) (fun _ => (n : SI) → ValidAt M n → Prop) where
   coe x := x.holds
 
 section UPred
@@ -90,9 +94,9 @@ instance : OFE (UPred M) where
   eq_dist' {P Q} := by
     refine ⟨fun h _ _ _ _ _ => h ▸ Iff.rfl, fun h => ?_⟩
     ext n e
-    exact h n n e.val (Nat.le_refl n) e.property
+    exact h n n e.val SIdx.le_refl e.property
   dist_lt Hdist Hlt _ _ Hle Hvalid :=
-    Hdist _ _ (Nat.le_trans Hle (Nat.le_of_succ_le Hlt)) Hvalid
+    Hdist _ _ (SIdx.le_trans Hle (SIdx.lt_le_incl Hlt)) Hvalid
 
 #rocq_ignore uPred_equiv' "Inlined in the `OFE` construction"
 #rocq_ignore uPred_equiv "Not needed"
@@ -103,27 +107,64 @@ instance : OFE (UPred M) where
 
 @[rocq_alias uPred_ne]
 theorem uPred_ne {P : UPred M} {n} {m₁ m₂ : ValidAt M n} (H : (m₁ : M) ≡{n}≡ (m₂ : M)) : P n m₁ ↔ P n m₂ :=
-  ⟨fun H' => P.mono H' H.to_incN .refl, fun H' => P.mono H' H.symm.to_incN .refl⟩
+  ⟨fun H' => P.mono H' H.to_incN SIdx.le_refl, fun H' => P.mono H' H.symm.to_incN SIdx.le_refl⟩
 
 #rocq_ignore uPred_proper "OFE is Leibniz; use equality"
 
 @[rocq_alias uPred_holds_ne]
 theorem uPred_holds_ne {P Q : UPred M} {n₁ n₂} {x : M}
     (HPQ : P ≡{n₂}≡ Q) (Hn : n₂ ≤ n₁) (Hx : ✓{n₂} x) (Hx' : ✓{n₁} x) (HQ : Q n₁ ⟨x, Hx'⟩) : P n₂ ⟨x, Hx⟩ :=
-  (HPQ _ _ .refl Hx).mpr (Q.mono HQ .rfl Hn)
+  (HPQ _ _ SIdx.le_refl Hx).mpr (Q.mono HQ .rfl Hn)
+
+/-- The completion of a bounded chain of `UPred`s: holds at `k` if every approximant `c m` with
+`m < n` holds at every index `m ≤ k`. Unlike Rocq's transfinite `uPred_bcompl'`, this is used only
+at limit indices (via `IsCOFE.lbcompl`), but it is well-defined for arbitrary `n`. -/
+@[rocq_alias uPred_bcompl']
+def UPred.bcompl (n : SI) (c : BChain (UPred M) n) : UPred M where
+  holds k x := ∀ m (hm : m < n) (Hle : m ≤ k), (c.bchain m hm) m (x.le Hle)
+  mono {n1 n2 x1 x2 HP Hx12 Hn12 m hm Hmn2} := by
+    refine mono _ (HP m hm (SIdx.le_trans Hmn2 Hn12)) ?_ SIdx.le_refl
+    exact Hx12.le Hmn2
+
+@[rocq_alias uPred_bcompl'_ne]
+theorem UPred.bcompl_ne {n : SI} (c d : BChain (UPred M) n) {k : SI}
+    (Hne : ∀ p (hp : p < n), c.bchain p hp ≡{k}≡ d.bchain p hp) : bcompl n c ≡{k}≡ bcompl n d := by
+  intro i x Hik Hv
+  refine ⟨fun H j hj Hji => ?_, fun H j hj Hji => ?_⟩
+  · exact (Hne j hj _ _ (SIdx.le_trans Hji Hik) _).mp (H j hj Hji)
+  · exact (Hne j hj _ _ (SIdx.le_trans Hji Hik) _).mpr (H j hj Hji)
+
+@[rocq_alias bcompl_unfold]
+theorem UPred.bcompl_holds {n : SI} (c : BChain (UPred M) n) (k : SI) (x : ValidAt M k) :
+    bcompl n c k x ↔ ∀ m (hm : m < n) (Hle : m ≤ k), (c.bchain m hm) m (x.le Hle) := .rfl
 
 @[rocq_alias uPred_cofe]
 instance : IsCOFE (UPred M) where
   compl c := {
     holds n x := ∀ n', (Hle : n' ≤ n) → (c n') n' (x.le Hle)
     mono {n1 n2 x1 x2 HP Hx12 Hn12 n3 Hn23} := by
-      refine mono _ (HP n3 (Nat.le_trans Hn23 Hn12)) ?_ .refl
+      refine mono _ (HP n3 (SIdx.le_trans Hn23 Hn12)) ?_ SIdx.le_refl
       exact Hx12.le Hn23
   }
   conv_compl {n c i x} Hin Hv := by
-    refine .trans ?_ (c.cauchy Hin _ _ .refl Hv).symm
-    refine ⟨fun H => H _ .refl, fun H n' Hn' => ?_⟩
-    exact (c.cauchy Hn' _ _ .refl _).mp (mono _ H .rfl Hn')
+    refine .trans ?_ (c.cauchy Hin _ _ SIdx.le_refl Hv).symm
+    refine ⟨fun H => H _ SIdx.le_refl, fun H n' Hn' => ?_⟩
+    exact (c.cauchy Hn' _ _ SIdx.le_refl _).mp (mono _ H .rfl Hn')
+  lbcompl {n} _ c := UPred.bcompl n c
+  conv_lbcompl {n} _ c m hm i x Him Hv := by
+    have hi : i < n := SIdx.le_lt_trans Him hm
+    refine .trans ?_ (c.bcauchy hi hm Him _ _ SIdx.le_refl Hv).symm
+    refine ⟨fun H => H i hi SIdx.le_refl, fun H j hj Hji => ?_⟩
+    exact (c.bcauchy hj hi Hji _ _ SIdx.le_refl _).mp (mono _ H .rfl Hji)
+  lbcompl_ne {n} _ c1 c2 _ hc := UPred.bcompl_ne c1 c2 hc
+
+/-- Limits of bounded chains of `UPred`s are unique (Transfinite Iris, `bcompl_unique`). This is
+required by the transfinite COFE solver. -/
+@[rocq_alias bcompl_unique]
+instance : BcomplUniqueLim (UPred M) where
+  lbcompl_unique {_} _ _ _ h _ _ _ _ :=
+    ⟨fun H m hm hmk => (h m hm m _ SIdx.le_refl _).mp (H m hm hmk),
+     fun H m hm hmk => (h m hm m _ SIdx.le_refl _).mpr (H m hm hmk)⟩
 
 #rocq_ignore uPred_compl "Inlined in the `IsCOFE` construction"
 

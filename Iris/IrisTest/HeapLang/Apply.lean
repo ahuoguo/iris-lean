@@ -11,6 +11,7 @@ public import Iris.HeapLang.Notation
 public import Iris.HeapLang.ProofMode
 public import Iris.HeapLang.PrimitiveLaws
 public import Iris.ProgramLogic.WeakestPre
+local stepindex Nat
 
 /-! Tests for `wp_apply` and `wp_smart_apply`. Several exercise machinery shared by
 both: evaluation-context search order, and the post-pass that must touch only the

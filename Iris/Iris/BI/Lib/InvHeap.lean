@@ -11,7 +11,8 @@ public import Iris.Algebra.Excl
 public import Iris.BI.Lib.GenHeap
 public import Iris.Instances.Lib.Invariants
 
-@[expose] public section
+@[expose] public noncomputable section
+local stepindex Nat
 
 namespace Iris
 
@@ -192,7 +193,7 @@ theorem invPointsToOwn_inv (l : L) (v : V) (I : V → Prop) :
 variable [genHeapGS L V GF H]
 
 local instance instTimelessInvHeapInvP : Timeless invHeapInvP :=
-  @exists_timeless _ _ _ _ fun _ => inferInstance
+  @exists_timeless _ _ _ _ _ _ _ fun _ => inferInstance
 
 @[rocq_alias inv_pointsto_acc]
 theorem invPointsTo_acc {E : CoPset} {l : L} {I : V → Prop} (hN : ↑invHeapN ⊆ E) :

@@ -9,6 +9,7 @@ public import Iris.BI.BigOp
 public import Iris.ProofMode
 
 @[expose] public section
+local stepindex Nat
 
 namespace IrisTest
 open Iris BI ProofMode Std

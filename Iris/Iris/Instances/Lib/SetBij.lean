@@ -12,7 +12,8 @@ public import Iris.Instances.IProp
 public import Iris.ProofMode
 meta import Iris.Std.RocqPorting
 
-@[expose] public section
+@[expose] public noncomputable section
+local stepindex Nat
 
 /-!
 # Propositions for reasoning about monotone partial bijections

@@ -12,6 +12,9 @@ public import Iris.Std.Vector
 
 namespace Iris
 
+variable {SI : Type _} [instSI : SIdx SI]
+local stepindex SI
+
 open OFE COFE
 
 /-! ## The vector OFE
@@ -79,6 +82,14 @@ instance : IsCOFE (Vector α n) where
   conv_compl {k c} := vec_dist_toList.mpr <| by
     rw [Vector.toList_ofList]
     exact conv_compl
+  lbcompl hn c := .ofList (IsCOFE.lbcompl hn (c.map vecToListHom))
+    ((length_dist (IsCOFE.conv_lbcompl hn _ hn.limit_lt_0)).trans Vector.length_toList)
+  conv_lbcompl hn c _ hm := vec_dist_toList.mpr <| by
+    rw [Vector.toList_ofList]
+    exact IsCOFE.conv_lbcompl hn _ hm
+  lbcompl_ne hn c1 c2 _ hc := vec_dist_toList.mpr <| by
+    rw [Vector.toList_ofList, Vector.toList_ofList]
+    exact IsCOFE.lbcompl_ne hn _ _ fun p hp => vec_dist_toList.mp (hc p hp)
 
 end cofe
 

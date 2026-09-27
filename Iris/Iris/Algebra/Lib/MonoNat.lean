@@ -13,6 +13,9 @@ public import Iris.Algebra.Numbers
 
 namespace Iris
 
+variable {SI : Type _} [instSI : SIdx SI]
+local stepindex SI
+
 @[rocq_alias mono_nat]
 abbrev MonoNat := Auth MaxNat
 

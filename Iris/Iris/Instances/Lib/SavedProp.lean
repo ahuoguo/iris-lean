@@ -12,7 +12,9 @@ public import Iris.BI.Algebra
 public import Iris.BI.InternalEq
 public import Iris.ProofMode
 
-@[expose] public section
+@[expose] public noncomputable section
+variable {SI : Type _} [instSI : Iris.SIdx SI]
+local stepindex SI
 
 namespace Iris
 

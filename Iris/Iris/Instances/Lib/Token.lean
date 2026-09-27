@@ -8,7 +8,8 @@ module
 public import Iris.ProofMode
 public import Iris.Instances.IProp.Instance
 
-@[expose] public section
+@[expose] public noncomputable section
+local stepindex Nat
 
 namespace Iris
 

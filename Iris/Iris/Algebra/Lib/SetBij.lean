@@ -16,6 +16,9 @@ meta import Iris.Std.RocqPorting
 
 namespace Iris
 
+variable {SI : Type _} [instSI : SIdx SI]
+local stepindex SI
+
 open Iris.Std CMRA OFE LawfulSet LeibnizSet View
 
 variable {S A B : Type _} [LawfulSet S (A × B)]
@@ -55,7 +58,7 @@ namespace SetBij
 
 /-- The view relation: a fragment is a subrelation of the authoritative bijection. -/
 @[rocq_alias gset_bij_view_rel, rocq_alias gset_bij_view_rel_raw]
-def viewRel : ViewRel (LeibnizSet S) (LeibnizSet S)
+def viewRel : ViewRel stepindex% (LeibnizSet S) (LeibnizSet S)
   | _, valid bijL, valid L => L ⊆ bijL ∧ SetBijective bijL
 
 @[rocq_alias gset_bij_view_rel_iff]

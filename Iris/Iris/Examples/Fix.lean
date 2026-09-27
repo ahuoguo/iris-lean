@@ -9,6 +9,7 @@ public import Iris.Algebra.OFE
 public import Iris.Algebra.COFESolver
 
 @[expose] public section
+local stepindex Nat
 
 /-!
 Every OFE is Leibniz, so the fold/unfold isomorphisms of the recursive domain equation solver's

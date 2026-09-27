@@ -10,6 +10,7 @@ public import Iris.Instances.Data
 public import Iris.Std.Equivalence
 
 @[expose] public section
+local stepindex Nat
 
 namespace Iris.Instances.Classical
 open Iris.BI Iris.Instances.Data Iris.Std
@@ -256,7 +257,9 @@ instance : BI (HeapProp Val) where
   later_intro _ := id
   later_sForall_2 _ h _ hp := h _ ⟨_, rfl⟩ hp
   later_sExists_false _ := fun ⟨p, hp⟩ => .inr ⟨_, ⟨_, rfl⟩, hp⟩
-  later_sep := ⟨fun _ => id, fun _ => id⟩
+  later_sep_1 _ := id
+  later_sep_2 _ := id
+  later_or_1 _ := id
   later_persistently := ⟨fun _ => id, fun _ => id⟩
   later_false_em _ h := .inr fun _ => h
 

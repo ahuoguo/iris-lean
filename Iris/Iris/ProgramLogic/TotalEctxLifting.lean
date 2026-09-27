@@ -13,6 +13,7 @@ namespace Iris.ProgramLogic
 open Iris BI Language.Notation EctxLanguage EctxLanguage.Notation
 
 @[expose] public section
+local stepindex Nat
 
 /-! ## Total lifting rules for evaluation-context languages -/
 namespace twp

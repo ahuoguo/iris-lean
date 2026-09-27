@@ -16,6 +16,9 @@ public import Iris.Algebra.IsOp
 
 namespace Iris
 
+variable {SI : Type _} [instSI : SIdx SI]
+local stepindex SI
+
 /-- Knowledge about a discardable fraction. -/
 @[rocq_alias dfrac]
 inductive DFrac where
@@ -90,6 +93,7 @@ def op : DFrac → DFrac → DFrac
 #rocq_ignore dfrac_valid_instance "Use CMRA instance"
 #rocq_ignore dfrac_ra_mixin "Not needed"
 
+set_option synthInstance.checkSynthOrder false in
 @[rocq_alias dfracR]
 instance instCMRADFrac : CMRA DFrac where
   pcore := pcore
@@ -100,7 +104,7 @@ instance instCMRADFrac : CMRA DFrac where
   pcore_ne {_} := by rintro ⟨⟩ ⟨⟩ <;> simp [pcore] <;> nofun
   validN_ne H := H ▸ id
   valid_iff_validN := ⟨fun x _ => x, fun x => x 0⟩
-  validN_succ := id
+  validN_le := fun h _ => h
   validN_op_left {_} := by rintro ⟨⟩ ⟨⟩ <;> simp [valid, op] <;> grind
   assoc := by rintro ⟨⟩ ⟨⟩ ⟨⟩ <;> grind [op]
   comm := by rintro ⟨⟩ ⟨⟩ <;> grind [op]

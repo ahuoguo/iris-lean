@@ -9,6 +9,7 @@ public import Iris.Instances.UPred.Instance
 public import Iris.ProofMode.Classes
 
 @[expose] public section
+local stepindex Nat
 
 open Iris BI CMRA ProofMode Std
 

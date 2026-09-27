@@ -9,8 +9,10 @@ public import Iris.Algebra.Auth
 public import Iris.Algebra.BigOp
 public import Iris.Algebra.Chain
 public import Iris.Algebra.CMRA
+public import Iris.Algebra.ULift
 public import Iris.Algebra.CMRABigOp
 public import Iris.Algebra.COFESolver
+public import Iris.Algebra.COFESolverTransfinite
 public import Iris.Algebra.Csum
 public import Iris.Algebra.DFrac
 public import Iris.Algebra.DynReservationMap
@@ -34,6 +36,9 @@ public import Iris.Algebra.OFE
 public import Iris.Algebra.Porting
 public import Iris.Algebra.ReservationMap
 public import Iris.Algebra.StepIndex
+public import Iris.Algebra.StepIndexPair
+public import Iris.Algebra.StepIndexTransfinite
+public import Iris.Algebra.Truncation
 public import Iris.Algebra.UFrac
 public import Iris.Algebra.Updates
 public import Iris.Algebra.UPred
